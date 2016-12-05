@@ -140,7 +140,7 @@ public class ProductProvider extends ContentProvider {
     }
 
     private Uri insertProduct(Uri uri, ContentValues contentValues) {
-        //TODO: CHECK input data HERE.
+        // CHECK input data HERE.
         String name     = contentValues.getAsString(ProductContract.ProductEntry.COLUMN_PRODUCT_NAME);
         if (TextUtils.isEmpty(name) || name == null) {
             return null;
