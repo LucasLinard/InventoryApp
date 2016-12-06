@@ -1,20 +1,21 @@
 package tech.linard.android.inventoryapp;
 
+import android.app.LoaderManager;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -25,16 +26,19 @@ import tech.linard.android.inventoryapp.data.ProductAdapter;
 import tech.linard.android.inventoryapp.data.ProductContract.ProductEntry;
 import tech.linard.android.inventoryapp.data.ProductDBHelper;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     ProductDBHelper productDBHelper;
     ListView listView;
     ProductAdapter mAdapter;
     Cursor cursor;
+    private static final int PRODUCT_LOADER = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -42,51 +46,37 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                //      .setAction("Action", null).show();
-                // insertDummyData();
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                 startActivity(intent);
             }
         });
-    }
+
+        listView = (ListView) findViewById(R.id.list_products);
+        View emptyView = findViewById(R.id.empty_view);
+        listView.setEmptyView(emptyView);
+
+        mAdapter = new ProductAdapter(this, null);
+        listView.setAdapter(mAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long id) {
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+                Uri currentProductUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, id);
+                intent.setData(currentProductUri);
+                startActivity(intent);
+            }
+        });
 
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        displayDatabaseItems();
+        getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         cursor.close();
-    }
-    private void displayDatabaseItems() {
-        String[] projection = {
-                ProductEntry._ID,
-                ProductEntry.COLUMN_PRODUCT_NAME,
-                ProductEntry.COLUMN_PRODUCT_PRICE,
-                ProductEntry.COLUMN_PRODUCT_QUANTITY,
-                ProductEntry.COLUMN_PRODUCT_IMAGE,
-                ProductEntry.COLUMN_PRODUCT_ON_SALE,
-                ProductEntry.COLUMN_PRODUCT_SUPPLIER
-        };
-        cursor = getContentResolver().query(ProductEntry.CONTENT_URI, projection, null, null, null);
-        listView = (ListView) findViewById(R.id.list_products);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long id) {
-                Uri currentProductUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, id);
-                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                intent.setData(currentProductUri);
-                startActivity(intent);
-            }
-        });
-        mAdapter = new ProductAdapter(this, cursor);
-        listView.setAdapter(mAdapter);
     }
 
     @Override
@@ -117,21 +107,29 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void insertDummyData() {
-        byte[] bytes = new byte[100];
-        Arrays.fill( bytes, (byte) 0 );
-        ContentValues values = new ContentValues();
-        values.put(ProductEntry.COLUMN_PRODUCT_NAME, "Android Programming");
-        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, 0.0);
-        values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, 0);
-        values.put(ProductEntry.COLUMN_PRODUCT_IMAGE, bytes);
-        productDBHelper = new ProductDBHelper(this);
-        SQLiteDatabase db = productDBHelper.getWritableDatabase();
-        long result = db.insert(ProductEntry.TABLE_NAME, null, values);
-        if (result == -1) {
-            Toast.makeText(this, "INSERT UNSUCCESSFUL", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "INSERT SUCCESSFUL with ID of " + result, Toast.LENGTH_SHORT).show();
-        }
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+
+        String[] projection = {
+                ProductEntry._ID,
+                ProductEntry.COLUMN_PRODUCT_NAME,
+                ProductEntry.COLUMN_PRODUCT_PRICE,
+                ProductEntry.COLUMN_PRODUCT_QUANTITY,
+                ProductEntry.COLUMN_PRODUCT_IMAGE,
+                ProductEntry.COLUMN_PRODUCT_ON_SALE,
+                ProductEntry.COLUMN_PRODUCT_SUPPLIER
+        };
+        return new CursorLoader(this, ProductEntry.CONTENT_URI, projection, null, null, null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        mAdapter.swapCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
+
     }
 }
