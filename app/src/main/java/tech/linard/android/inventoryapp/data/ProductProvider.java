@@ -7,7 +7,6 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -89,11 +88,13 @@ public class ProductProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Cannot query unnown URI" + uri);
         }
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
         return cursor;
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues contentValues) {
+
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case PRODUCTS:
@@ -157,6 +158,9 @@ public class ProductProvider extends ContentProvider {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
         }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+
         return ContentUris.withAppendedId(uri, id);
     }
 
@@ -165,6 +169,7 @@ public class ProductProvider extends ContentProvider {
 
         SQLiteDatabase database = productDBHelper.getWritableDatabase();
 
+        getContext().getContentResolver().notifyChange(uri, null);
         // Returns the number of database rows affected by the update statement
         return database.update(ProductContract.ProductEntry.TABLE_NAME, contentValues, selection, selectionArgs);
 

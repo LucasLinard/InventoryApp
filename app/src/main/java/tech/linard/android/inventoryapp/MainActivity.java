@@ -2,12 +2,10 @@ package tech.linard.android.inventoryapp;
 
 import android.app.LoaderManager;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -18,9 +16,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import java.util.Arrays;
 
 import tech.linard.android.inventoryapp.data.ProductAdapter;
 import tech.linard.android.inventoryapp.data.ProductContract.ProductEntry;
@@ -37,7 +32,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -67,22 +61,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 startActivity(intent);
             }
         });
-
-
         getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        cursor.close();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
     }
 
     @Override
@@ -98,18 +82,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
+
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-
         String[] projection = {
                 ProductEntry._ID,
                 ProductEntry.COLUMN_PRODUCT_NAME,

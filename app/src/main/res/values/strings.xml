@@ -21,4 +21,6 @@
     <string name="editor_update_prd_failed">Update FAILED</string>
     <string name="editor_update_prd_successful">Update SUCCESS</string>
     <string name="supplier">Supplier</string>
+    <string name="empty_view_title_text">Nenhum produto cadastrado.</string>
+    <string name="empty_view_subtitle_text">Clique no botão ao final da tela para cadastrar produtos.</string>
 </resources>

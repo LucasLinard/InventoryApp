@@ -391,8 +391,6 @@ public class DetailActivity extends AppCompatActivity implements View.OnClickLis
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             mProductImage.setImageBitmap(imageBitmap);
-
-
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] byteArray = stream.toByteArray();

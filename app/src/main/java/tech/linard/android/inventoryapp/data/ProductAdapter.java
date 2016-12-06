@@ -1,23 +1,21 @@
 package tech.linard.android.inventoryapp.data;
 
 import android.annotation.SuppressLint;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.sql.Blob;
-
-import tech.linard.android.inventoryapp.MainActivity;
-import tech.linard.android.inventoryapp.data.ProductContract.ProductEntry;
 import tech.linard.android.inventoryapp.R;
+import tech.linard.android.inventoryapp.data.ProductContract.ProductEntry;
 
 /**
  * Created by lucas on 04/12/16.
@@ -37,28 +35,41 @@ public class ProductAdapter extends CursorAdapter {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
         //name price quantity image
-        String name = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME));
-        double price = cursor.getDouble(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PRICE));
-        int quantity = cursor.getInt(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_QUANTITY));
-        byte[] image =  cursor.getBlob(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_IMAGE));
-        int onSale = cursor.getInt(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_ON_SALE));
+        final int productId = cursor.getInt(cursor.getColumnIndex(ProductEntry._ID));
+        final String name = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME));
+        final double price = cursor.getDouble(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PRICE));
+        final int quantity = cursor.getInt(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_QUANTITY));
+        final byte[] image =  cursor.getBlob(cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_IMAGE));
+        final int onSale = cursor.getInt(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_ON_SALE));
+        final String supplier = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_SUPPLIER));
 
         TextView txtName = (TextView) view.findViewById(R.id.txt_name);
         TextView txtPrice = (TextView) view.findViewById(R.id.txt_price);
         TextView txtQuantity = (TextView) view.findViewById(R.id.txt_quantity);
         ImageView imgSale = (ImageView) view.findViewById(R.id.sale_button);
-        if (onSale == 0) {
-            imgSale.setVisibility(View.GONE);
+        imgSale.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (quantity > 0) {
+                    int newQuantity = quantity - 1;
 
-        } else {
-            imgSale.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Toast.makeText(view.getContext(), "SALE!", Toast.LENGTH_SHORT).show();
+                    Uri currentProductUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, (long) productId);
+
+                    ContentValues values = new ContentValues();
+                    values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_NAME, name);
+                    values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_PRICE, price);
+                    values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_QUANTITY, newQuantity );
+                    values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_ON_SALE, onSale);
+                    values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_SUPPLIER, supplier);
+                    values.put(ProductContract.ProductEntry.COLUMN_PRODUCT_IMAGE, image);
+
+                    int rowsAffected = view.getContext().getContentResolver().update(currentProductUri, values, null, null);
+                    if (rowsAffected > 0) {
+                        Toast.makeText(view.getContext(), "Product SOLD!", Toast.LENGTH_SHORT).show();
+                    }
                 }
-            });
-
-        }
+            }
+        });
 
         txtName.setText(name);
         txtPrice.setText(Double.toString(price));
